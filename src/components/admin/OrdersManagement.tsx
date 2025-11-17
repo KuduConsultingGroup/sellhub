@@ -31,22 +31,35 @@ const OrdersManagement = () => {
   const fetchOrders = async () => {
     let query = supabase
       .from("orders")
-      .select(`
-        *,
-        profiles(name, email),
-        order_items(product_name_snapshot, quantity, line_total)
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (filterStatus !== "all") {
-      query = query.eq("status", filterStatus);
+      query = query.eq("status", filterStatus as "pending" | "paid" | "shipped" | "completed" | "cancelled");
     }
 
-    const { data } = await query;
-    if (data) setOrders(data);
+    const { data: ordersData } = await query;
+    
+    if (ordersData) {
+      const ordersWithDetails = await Promise.all(
+        ordersData.map(async (order) => {
+          const [profileData, itemsData] = await Promise.all([
+            supabase.from("profiles").select("name, email").eq("id", order.user_id).single(),
+            supabase.from("order_items").select("product_name_snapshot, quantity, line_total").eq("order_id", order.id)
+          ]);
+          
+          return {
+            ...order,
+            profiles: profileData.data,
+            order_items: itemsData.data || []
+          };
+        })
+      );
+      setOrders(ordersWithDetails as Order[]);
+    }
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: "pending" | "paid" | "shipped" | "completed" | "cancelled") => {
     const { error } = await supabase
       .from("orders")
       .update({ status: newStatus })
@@ -135,7 +148,10 @@ const OrdersManagement = () => {
                 
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Update Status:</span>
-                  <Select value={order.status} onValueChange={(value) => updateOrderStatus(order.id, value)}>
+                  <Select 
+                    value={order.status} 
+                    onValueChange={(value: "pending" | "paid" | "shipped" | "completed" | "cancelled") => updateOrderStatus(order.id, value)}
+                  >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />
                     </SelectTrigger>
