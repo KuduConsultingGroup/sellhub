@@ -53,11 +53,31 @@ const AdminOverview = () => {
   const fetchLatestOrders = async () => {
     const { data } = await supabase
       .from("orders")
-      .select("id, created_at, final_amount, status, profiles(name)")
+      .select(`
+        id,
+        created_at,
+        final_amount,
+        status,
+        user_id
+      `)
       .order("created_at", { ascending: false })
       .limit(5);
 
-    if (data) setLatestOrders(data);
+    if (data) {
+      // Fetch profiles separately
+      const ordersWithProfiles = await Promise.all(
+        data.map(async (order) => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", order.user_id)
+            .single();
+          
+          return { ...order, profiles: profile };
+        })
+      );
+      setLatestOrders(ordersWithProfiles as Order[]);
+    }
   };
 
   const statCards = [

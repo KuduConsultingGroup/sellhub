@@ -29,9 +29,9 @@ export function AdminSidebar() {
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible>
+    <Sidebar className={collapsed ? "w-14" : "w-60"}>
       <SidebarContent>
-        <SidebarGroup defaultOpen>
+        <SidebarGroup>
           <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
