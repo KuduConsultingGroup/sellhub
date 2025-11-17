@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, TrendingUp } from "lucide-react";
+import { ArrowRight, Star, TrendingUp, Shield, Truck, CreditCard, Headphones, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface Product {
   id: string;
@@ -12,280 +14,286 @@ interface Product {
   price: number;
   main_image_url: string | null;
   short_description: string | null;
-  category_id: string | null;
+  is_new: boolean | null;
+  is_featured: boolean | null;
 }
 
 interface Category {
   id: string;
   name: string;
   slug: string;
+  image_url: string | null;
+}
+
+interface Promotion {
+  id: string;
+  title: string;
+  description: string | null;
+  end_date: string;
 }
 
 const Index = () => {
-  const [featuredProduct, setFeaturedProduct] = useState<Product | null>(null);
-  const [highlightProducts, setHighlightProducts] = useState<Product[]>([]);
-  const [newProducts, setNewProducts] = useState<Product[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [totalProducts, setTotalProducts] = useState(0);
+  const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    // Fetch featured product
+    // Featured products
     const { data: featured } = await supabase
       .from("products")
       .select("*")
       .eq("is_active", true)
       .eq("is_featured", true)
-      .limit(1)
-      .single();
-    
-    if (featured) setFeaturedProduct(featured);
+      .limit(4);
+    if (featured) setFeaturedProducts(featured);
 
-    // Fetch highlight products for sidebar
-    const { data: highlights } = await supabase
-      .from("products")
-      .select("*")
-      .eq("is_active", true)
-      .limit(2)
-      .neq("id", featured?.id || "");
-    
-    if (highlights) setHighlightProducts(highlights);
-
-    // Fetch new products for bottom section
+    // New arrivals
     const { data: newItems } = await supabase
       .from("products")
       .select("*")
       .eq("is_active", true)
       .eq("is_new", true)
-      .limit(4);
-    
-    if (newItems) setNewProducts(newItems);
+      .limit(12);
+    if (newItems) setNewArrivals(newItems);
 
-    // Fetch categories
+    // Trending (just get some products for demo)
+    const { data: trending } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true)
+      .limit(6);
+    if (trending) setTrendingProducts(trending);
+
+    // Categories
     const { data: cats } = await supabase
       .from("categories")
       .select("*")
-      .limit(6);
-    
+      .limit(8);
     if (cats) setCategories(cats);
 
-    // Get total product count
-    const { count } = await supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true);
-    
-    if (count) setTotalProducts(count);
+    // Active promotion
+    const { data: promo } = await supabase
+      .from("promotions")
+      .select("*")
+      .eq("is_active", true)
+      .gte("end_date", new Date().toISOString())
+      .limit(1)
+      .single();
+    if (promo) setActivePromotion(promo);
   };
 
-  const popularColors = [
-    { name: "Red", color: "bg-colors-red" },
-    { name: "Blue", color: "bg-colors-blue" },
-    { name: "Green", color: "bg-colors-green" },
-    { name: "Orange", color: "bg-colors-orange" },
-    { name: "Purple", color: "bg-colors-purple" },
-    { name: "Pink", color: "bg-colors-pink" },
+  const whyShopFeatures = [
+    {
+      icon: Truck,
+      title: "Worldwide Shipping",
+      description: "Fast delivery to your doorstep"
+    },
+    {
+      icon: Shield,
+      title: "Secure Checkout",
+      description: "100% secure payment"
+    },
+    {
+      icon: CreditCard,
+      title: "Easy Returns",
+      description: "30-day money back guarantee"
+    },
+    {
+      icon: Headphones,
+      title: "24/7 Support",
+      description: "Always here to help you"
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      rating: 5,
+      text: "Amazing quality and fast shipping! Will definitely order again.",
+      avatar: "SJ"
+    },
+    {
+      name: "Michael Chen",
+      rating: 5,
+      text: "Best online shopping experience I've had. Great customer service!",
+      avatar: "MC"
+    },
+    {
+      name: "Emma Williams",
+      rating: 5,
+      text: "Love the products! Everything arrived exactly as described.",
+      avatar: "EW"
+    }
   ];
 
   return (
-    <div className="min-h-screen pb-12">
+    <div className="min-h-screen">
       <Header />
       
-      <div className="container mx-auto px-4 lg:px-8 mt-8">
-        {/* Main Hero + Sidebar Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-          {/* Main Hero Card */}
-          <div className="lg:col-span-8">
-            <div className="relative bg-card rounded-[2.5rem] shadow-float p-8 md:p-12 overflow-hidden hover-lift">
-              {/* Step Indicator */}
-              <div className="absolute top-8 right-8 text-6xl font-bold text-muted/20">01</div>
-              
-              <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
-                {/* Left Content */}
-                <div className="space-y-6">
-                  <div className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                    Featured Collection
-                  </div>
-                  
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                    {featuredProduct?.name || "Discover Amazing Products"}
-                  </h1>
-                  
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    {featuredProduct?.short_description || "Shop the latest trends with unbeatable prices and quality"}
-                  </p>
-                  
+      {/* Hero Section */}
+      <section className="relative py-12 md:py-20 overflow-hidden">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="bg-card rounded-[3rem] shadow-float p-8 md:p-16 relative overflow-hidden">
+            {/* Background gradient decoration */}
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-br from-primary/10 to-transparent rounded-[3rem] -z-0" />
+            
+            <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
+              <div className="space-y-6">
+                <Badge className="inline-flex rounded-full px-4 py-2 bg-primary/10 text-primary border-none">
+                  New Season Collection
+                </Badge>
+                
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+                  Discover the Future of Shopping
+                </h1>
+                
+                <p className="text-xl text-muted-foreground leading-relaxed">
+                  Latest Trends. Modern Designs. Premium Quality. Experience shopping redefined with our curated collection of world-class products.
+                </p>
+                
+                <div className="flex flex-wrap gap-4 pt-4">
                   <Button 
                     size="lg" 
                     className="rounded-full px-8 py-6 text-lg bg-primary hover:bg-primary-hover shadow-lg group"
                     asChild
                   >
                     <Link to="/products">
-                      View All Products
+                      Shop Now
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
-                </div>
-
-                {/* Right Product Image */}
-                <div className="relative">
-                  {featuredProduct?.main_image_url ? (
-                    <img
-                      src={featuredProduct.main_image_url}
-                      alt={featuredProduct.name}
-                      className="w-full h-auto max-h-96 object-contain drop-shadow-2xl"
-                    />
-                  ) : (
-                    <div className="w-full h-96 bg-muted rounded-3xl flex items-center justify-center">
-                      <span className="text-muted-foreground">Featured Product</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Sidebar */}
-          <div className="lg:col-span-4 space-y-4">
-            {/* Popular Colors Card */}
-            <div className="bg-card rounded-[2rem] shadow-card p-6">
-              <h3 className="text-lg font-bold mb-4">Popular Colors</h3>
-              <div className="flex flex-wrap gap-3">
-                {popularColors.map((color) => (
-                  <button
-                    key={color.name}
-                    className={`w-12 h-12 rounded-full ${color.color} shadow-md hover:scale-110 transition-transform cursor-pointer border-2 border-background`}
-                    title={color.name}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Product Highlight Cards */}
-            {highlightProducts.map((product) => (
-              <Link
-                key={product.id}
-                to={`/product/${product.slug}`}
-                className="block bg-card rounded-[2rem] shadow-card p-6 hover-lift group"
-              >
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 rounded-2xl bg-muted overflow-hidden flex-shrink-0">
-                    {product.main_image_url ? (
-                      <img
-                        src={product.main_image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-sm mb-1 truncate">{product.name}</h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {product.short_description || "Premium quality product"}
-                    </p>
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="rounded-full flex-shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="rounded-full px-8 py-6 text-lg"
+                    asChild
                   >
-                    <ArrowRight className="h-4 w-4" />
+                    <Link to="/products">View Latest Products</Link>
                   </Button>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </div>
 
-        {/* Bottom Info Strip */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          {/* More Products Card */}
-          <div className="bg-card rounded-[2rem] shadow-card p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex -space-x-2">
-                {newProducts.slice(0, 3).map((product) => (
-                  <div
-                    key={product.id}
-                    className="w-8 h-8 rounded-full bg-muted border-2 border-background overflow-hidden"
-                  >
-                    {product.main_image_url && (
-                      <img
-                        src={product.main_image_url}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    )}
+                <div className="flex items-center gap-8 pt-4">
+                  <div>
+                    <p className="text-3xl font-bold">5M+</p>
+                    <p className="text-sm text-muted-foreground">Happy Customers</p>
                   </div>
-                ))}
+                  <div>
+                    <p className="text-3xl font-bold">4.8★</p>
+                    <p className="text-sm text-muted-foreground">Average Rating</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                {featuredProducts[0]?.main_image_url ? (
+                  <img
+                    src={featuredProducts[0].main_image_url}
+                    alt="Featured Product"
+                    className="w-full h-auto max-h-[600px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-[500px] bg-gradient-to-br from-primary/20 to-accent/20 rounded-[3rem] flex items-center justify-center">
+                    <p className="text-2xl font-bold text-muted-foreground">Featured Product</p>
+                  </div>
+                )}
               </div>
             </div>
-            <p className="text-sm font-bold">More Products</p>
-            <p className="text-xs text-muted-foreground">{totalProducts}+ items</p>
-          </div>
-
-          {/* Stats Card */}
-          <div className="bg-card rounded-[2rem] shadow-card p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="h-5 w-5 text-primary fill-primary" />
-              <span className="text-lg font-bold">4.8</span>
-            </div>
-            <p className="text-sm font-bold">Customer Rating</p>
-            <p className="text-xs text-muted-foreground">10k+ reviews</p>
-          </div>
-
-          {/* Trending Card */}
-          <div className="bg-card rounded-[2rem] shadow-card p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span className="text-lg font-bold">#1</span>
-            </div>
-            <p className="text-sm font-bold">Trending Store</p>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </div>
-
-          {/* New Arrivals Card */}
-          <div className="bg-card rounded-[2rem] shadow-card p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-lg">🎉</span>
-              </div>
-            </div>
-            <p className="text-sm font-bold">New Arrivals</p>
-            <p className="text-xs text-muted-foreground">Fresh products weekly</p>
           </div>
         </div>
+      </section>
 
-        {/* New Products Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">New Arrivals</h2>
-              <p className="text-muted-foreground">Check out our latest products</p>
-            </div>
-            <Button variant="ghost" className="rounded-full" asChild>
-              <Link to="/products">
-                View All
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+      {/* Latest Trends Section */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge className="inline-flex rounded-full px-4 py-2 bg-primary/10 text-primary border-none mb-4">
+              Trending Now
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Latest Trends</h2>
+            <p className="text-xl text-muted-foreground">Discover what's hot in the market</p>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newProducts.map((product) => (
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trendingProducts.map((product, index) => (
               <Link
                 key={product.id}
                 to={`/product/${product.slug}`}
                 className="group"
               >
-                <div className="bg-card rounded-[2rem] shadow-card overflow-hidden hover-lift">
-                  <div className="aspect-square bg-muted overflow-hidden">
+                <Card className="rounded-[2rem] shadow-card overflow-hidden hover-lift border-none bg-gradient-to-br from-card to-muted/30">
+                  <div className="aspect-square overflow-hidden relative">
+                    {product.main_image_url ? (
+                      <img
+                        src={product.main_image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                        <TrendingUp className="h-16 w-16 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Badge className="absolute top-4 left-4 rounded-full bg-primary text-primary-foreground border-none">
+                      Trend #{index + 1}
+                    </Badge>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                      {product.short_description || "Explore this trending product"}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold">${product.price}</span>
+                      <Button className="rounded-full" size="icon">
+                        <ArrowRight className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* New Arrivals Section */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <Badge className="inline-flex rounded-full px-4 py-2 bg-primary/10 text-primary border-none mb-4">
+                Fresh Picks
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-bold mb-2">New Arrivals</h2>
+              <p className="text-xl text-muted-foreground">Just landed in our store</p>
+            </div>
+            <div className="hidden md:flex gap-2">
+              <Button variant="outline" size="icon" className="rounded-full">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button variant="outline" size="icon" className="rounded-full">
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {newArrivals.slice(0, 8).map((product) => (
+              <Link
+                key={product.id}
+                to={`/product/${product.slug}`}
+                className="group"
+              >
+                <Card className="rounded-[2rem] shadow-card overflow-hidden hover-lift border-none">
+                  <div className="aspect-square bg-muted overflow-hidden relative">
                     {product.main_image_url ? (
                       <img
                         src={product.main_image_url}
@@ -294,72 +302,289 @@ const Index = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        No image
+                        New Product
                       </div>
                     )}
+                    <Badge className="absolute top-3 right-3 rounded-full bg-primary text-primary-foreground border-none">
+                      New
+                    </Badge>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-bold mb-1 truncate">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                    <h3 className="font-bold mb-1 truncate group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                       {product.short_description || "Premium quality product"}
                     </p>
-                    <p className="text-lg font-bold text-primary">${product.price}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold">${product.price}</span>
+                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary hover:text-primary-foreground">
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </Card>
               </Link>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Categories Section */}
-        <div className="mb-12">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold mb-2">Shop by Category</h2>
-            <p className="text-muted-foreground">Browse our curated collections</p>
+      {/* Featured Products Section */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge className="inline-flex rounded-full px-4 py-2 bg-primary/10 text-primary border-none mb-4">
+              Handpicked For You
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Featured Products</h2>
+            <p className="text-xl text-muted-foreground">Our top picks just for you</p>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {featuredProducts.map((product) => (
+              <Card
+                key={product.id}
+                className="rounded-[2.5rem] shadow-float overflow-hidden hover-lift border-none group"
+              >
+                <div className="grid md:grid-cols-2 gap-6 p-6 md:p-8">
+                  <div className="aspect-square rounded-[2rem] overflow-hidden bg-muted">
+                    {product.main_image_url ? (
+                      <img
+                        src={product.main_image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Star className="h-16 w-16 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col justify-center space-y-4">
+                    <Badge className="w-fit rounded-full bg-primary/10 text-primary border-none">
+                      Featured
+                    </Badge>
+                    <h3 className="text-2xl md:text-3xl font-bold">{product.name}</h3>
+                    <p className="text-muted-foreground">
+                      {product.short_description || "Premium quality product with exceptional features"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Star className="h-5 w-5 text-primary fill-primary" />
+                      <Star className="h-5 w-5 text-primary fill-primary" />
+                      <Star className="h-5 w-5 text-primary fill-primary" />
+                      <Star className="h-5 w-5 text-primary fill-primary" />
+                      <Star className="h-5 w-5 text-primary fill-primary" />
+                      <span className="text-sm text-muted-foreground ml-2">(128 reviews)</span>
+                    </div>
+                    <p className="text-3xl font-bold">${product.price}</p>
+                    <div className="flex gap-3 pt-2">
+                      <Button className="rounded-full flex-1" asChild>
+                        <Link to={`/product/${product.slug}`}>View Product</Link>
+                      </Button>
+                      <Button variant="outline" className="rounded-full">Add to Cart</Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why Shop With Us Section */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Why Shop With Us?</h2>
+            <p className="text-xl text-muted-foreground">We're committed to your satisfaction</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {whyShopFeatures.map((feature, index) => (
+              <Card key={index} className="rounded-[2rem] shadow-card p-8 text-center hover-lift border-none">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                  <feature.icon className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Categories Section */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Popular Categories</h2>
+            <p className="text-xl text-muted-foreground">Browse by your interests</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 to={`/category/${category.slug}`}
                 className="group"
               >
-                <div className="bg-card rounded-[2rem] shadow-card p-6 text-center hover-lift">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center text-2xl">
+                <Card className="rounded-[2rem] shadow-card p-6 text-center hover-lift border-none">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-4 text-2xl group-hover:scale-110 transition-transform">
                     {category.name.charAt(0)}
                   </div>
-                  <h3 className="font-bold text-sm group-hover:text-primary transition-colors">
+                  <h3 className="font-bold text-sm group-hover:text-primary transition-colors truncate">
                     {category.name}
                   </h3>
-                </div>
+                </Card>
               </Link>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Footer */}
-        <footer className="bg-card rounded-[2rem] shadow-card p-8">
-          <div className="text-center space-y-4">
-            <h3 className="font-bold text-lg">Follow us on</h3>
-            <div className="flex justify-center gap-4">
-              <a href="#" className="w-12 h-12 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
-                <span className="text-lg">𝕏</span>
-              </a>
-              <a href="#" className="w-12 h-12 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
-                <span className="text-lg">📷</span>
-              </a>
-              <a href="#" className="w-12 h-12 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
-                <span className="text-lg">💼</span>
-              </a>
-              <a href="#" className="w-12 h-12 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
-                <span className="text-lg">🎵</span>
-              </a>
-            </div>
-            <p className="text-sm text-muted-foreground">© 2024 ShopHub. All rights reserved.</p>
+      {/* Customer Reviews Section */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge className="inline-flex rounded-full px-4 py-2 bg-primary/10 text-primary border-none mb-4">
+              Testimonials
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">What Our Customers Say</h2>
+            <p className="text-xl text-muted-foreground">Join 5M+ happy shoppers worldwide</p>
           </div>
-        </footer>
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="rounded-[2rem] shadow-card p-8 border-none hover-lift">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                    {testimonial.avatar}
+                  </div>
+                  <div>
+                    <p className="font-bold">{testimonial.name}</p>
+                    <div className="flex gap-1">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 text-primary fill-primary" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-muted-foreground italic">"{testimonial.text}"</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Promotional Banner Section */}
+      {activePromotion && (
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto px-4 lg:px-8">
+            <Card className="rounded-[3rem] shadow-float overflow-hidden border-none bg-gradient-to-r from-primary to-accent">
+              <div className="p-12 md:p-16 text-center text-primary-foreground">
+                <Badge className="inline-flex rounded-full px-4 py-2 bg-background/20 backdrop-blur-sm border-none mb-6">
+                  Limited Time Offer
+                </Badge>
+                <h2 className="text-4xl md:text-6xl font-bold mb-6">{activePromotion.title}</h2>
+                <p className="text-xl md:text-2xl mb-8 opacity-90">
+                  {activePromotion.description || "Don't miss out on this exclusive deal"}
+                </p>
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  className="rounded-full px-8 py-6 text-lg shadow-lg"
+                  asChild
+                >
+                  <Link to="/promotions">
+                    Shop the Sale
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="py-16 bg-card">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div>
+              <h3 className="text-2xl font-bold mb-4">ShopHub</h3>
+              <p className="text-muted-foreground mb-6">
+                Your one-stop shop for quality products at great prices. Experience shopping redefined.
+              </p>
+              <div className="flex gap-3">
+                <a href="#" className="w-10 h-10 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
+                  𝕏
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
+                  📷
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
+                  💼
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors">
+                  🎵
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-4">Shop</h4>
+              <ul className="space-y-3 text-muted-foreground">
+                <li><Link to="/products" className="hover:text-primary transition-colors">All Products</Link></li>
+                <li><Link to="/promotions" className="hover:text-primary transition-colors">Promotions</Link></li>
+                <li><a href="#" className="hover:text-primary transition-colors">New Arrivals</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Featured</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-4">Company</h4>
+              <ul className="space-y-3 text-muted-foreground">
+                <li><a href="#" className="hover:text-primary transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Press</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-4">Newsletter</h4>
+              <p className="text-muted-foreground mb-4">Subscribe for exclusive offers and updates</p>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  className="flex-1 px-4 py-2 rounded-full bg-muted border-none focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <Button className="rounded-full">
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                © 2024 ShopHub. All rights reserved.
+              </p>
+              <div className="flex gap-4 items-center">
+                <span className="text-sm text-muted-foreground">We accept:</span>
+                <div className="flex gap-2">
+                  <div className="w-10 h-6 rounded bg-muted flex items-center justify-center text-xs">💳</div>
+                  <div className="w-10 h-6 rounded bg-muted flex items-center justify-center text-xs">💰</div>
+                  <div className="w-10 h-6 rounded bg-muted flex items-center justify-center text-xs">🏦</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
