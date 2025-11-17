@@ -214,16 +214,16 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
         <Header />
-        <div className="container py-8">
-          <div className="grid md:grid-cols-2 gap-8">
-            <Skeleton className="aspect-square w-full" />
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-3/4" />
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-12 w-full" />
+        <div className="container py-8 lg:py-12">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+            <Skeleton className="aspect-square w-full rounded-3xl" />
+            <div className="space-y-6">
+              <Skeleton className="h-10 w-3/4 rounded-2xl" />
+              <Skeleton className="h-6 w-1/4 rounded-full" />
+              <Skeleton className="h-32 w-full rounded-2xl" />
+              <Skeleton className="h-14 w-full rounded-2xl" />
             </div>
           </div>
         </div>
@@ -233,14 +233,16 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
         <Header />
         <div className="container py-16 text-center">
-          <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-8">The product you're looking for doesn't exist.</p>
-          <Button asChild>
-            <Link to="/">Go Home</Link>
-          </Button>
+          <div className="glass-card rounded-3xl p-12 max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold mb-4">Product Not Found</h1>
+            <p className="text-muted-foreground mb-8 text-lg">The product you're looking for doesn't exist.</p>
+            <Button asChild size="lg" className="rounded-full px-8">
+              <Link to="/">Go Home</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -251,51 +253,59 @@ const ProductDetail = () => {
     ...(Array.isArray(product.images) ? product.images : []),
   ].filter(Boolean) as string[];
 
+  const isInStock = product.stock_quantity !== null && product.stock_quantity > 0;
+  const isLowStock = product.stock_quantity !== null && product.stock_quantity > 0 && product.stock_quantity <= 5;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <Header />
       
-      <div className="container py-8">
+      <div className="container py-8 lg:py-12">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link to="/" className="hover:text-foreground">Home</Link>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+          <Link to="/" className="hover:text-primary transition-colors">Home</Link>
           <span>/</span>
           {product.categories && (
             <>
-              <Link to={`/category/${product.categories.slug}`} className="hover:text-foreground">
+              <Link to={`/category/${product.categories.slug}`} className="hover:text-primary transition-colors">
                 {product.categories.name}
               </Link>
               <span>/</span>
             </>
           )}
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground font-medium">{product.name}</span>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image Gallery */}
+        {/* Main Product Section */}
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
+          {/* Left Column - Product Media */}
           <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-              {selectedImage ? (
-                <img
-                  src={selectedImage}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  No Image
-                </div>
-              )}
+            <div className="glass-card rounded-3xl p-4 lg:p-6">
+              <div className="aspect-square overflow-hidden rounded-2xl bg-muted/50">
+                {selectedImage ? (
+                  <img
+                    src={selectedImage}
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
+                    No Image
+                  </div>
+                )}
+              </div>
             </div>
             
             {allImages.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-3">
                 {allImages.map((image, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(image as string)}
-                    className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                      selectedImage === image ? "border-primary" : "border-transparent"
+                    className={`aspect-square overflow-hidden rounded-2xl border-2 transition-all hover:scale-105 ${
+                      selectedImage === image 
+                        ? "border-primary shadow-lg shadow-primary/20" 
+                        : "border-transparent hover:border-primary/50"
                     }`}
                   >
                     <img
@@ -309,59 +319,90 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* Product Details */}
-          <div className="space-y-6">
+          {/* Right Column - Product Info & Actions */}
+          <div className="glass-card rounded-3xl p-6 lg:p-8 space-y-6">
+            {/* Header */}
             <div>
-              {product.is_new && (
-                <Badge variant="secondary" className="mb-2">New</Badge>
-              )}
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <div className="flex items-center gap-2 mb-3">
+                {product.is_new && (
+                  <Badge className="rounded-full px-4 py-1 bg-primary/10 text-primary border-primary/20">
+                    ✨ New
+                  </Badge>
+                )}
+                {isLowStock && (
+                  <Badge variant="outline" className="rounded-full px-4 py-1 border-amber-500/20 text-amber-600">
+                    Low Stock
+                  </Badge>
+                )}
+                {!isInStock && (
+                  <Badge variant="destructive" className="rounded-full px-4 py-1">
+                    Out of Stock
+                  </Badge>
+                )}
+              </div>
+              <h1 className="text-3xl lg:text-4xl font-bold mb-2 leading-tight">{product.name}</h1>
               {product.categories && (
                 <Link
                   to={`/category/${product.categories.slug}`}
-                  className="text-sm text-muted-foreground hover:text-primary"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
                 >
-                  {product.categories.name}
+                  {product.categories.name} →
                 </Link>
               )}
             </div>
 
-            <div className="flex items-baseline gap-4">
-              <p className="text-4xl font-bold text-primary">
+            {/* Price & Stock */}
+            <div className="flex items-baseline gap-4 py-4 border-y border-border/50">
+              <p className="text-4xl lg:text-5xl font-bold text-primary">
                 ${product.price.toFixed(2)}
               </p>
-              {product.stock_quantity !== null && (
+              {product.stock_quantity !== null && isInStock && (
                 <p className="text-sm text-muted-foreground">
-                  {product.stock_quantity > 0
-                    ? `${product.stock_quantity} in stock`
-                    : "Out of stock"}
+                  {product.stock_quantity} in stock
                 </p>
               )}
             </div>
 
-            <div className="prose prose-sm max-w-none">
-              <p className="text-muted-foreground">{product.description}</p>
+            {/* Description */}
+            {product.description && (
+              <div className="prose prose-sm max-w-none">
+                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+              </div>
+            )}
+
+            {/* Key Features/Benefits */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="glass-card rounded-2xl p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Free Shipping</p>
+                <p className="font-semibold text-sm">On orders $50+</p>
+              </div>
+              <div className="glass-card rounded-2xl p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Easy Returns</p>
+                <p className="font-semibold text-sm">30-day policy</p>
+              </div>
             </div>
 
             {/* Quantity Selector */}
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium">Quantity:</span>
-                <div className="flex items-center border rounded-md">
+                <div className="flex items-center glass-card rounded-full overflow-hidden">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={decrementQuantity}
                     disabled={quantity <= 1}
+                    className="rounded-none hover:bg-primary/10"
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-12 text-center">{quantity}</span>
+                  <span className="w-14 text-center font-semibold">{quantity}</span>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={incrementQuantity}
-                    disabled={product.stock_quantity !== null && quantity >= product.stock_quantity}
+                    disabled={!isInStock || (product.stock_quantity !== null && quantity >= product.stock_quantity)}
+                    className="rounded-none hover:bg-primary/10"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -369,39 +410,55 @@ const ProductDetail = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="space-y-3">
                 <Button
                   onClick={handleAddToCart}
-                  className="flex-1"
+                  className="w-full rounded-full h-14 text-lg font-semibold"
                   size="lg"
-                  disabled={product.stock_quantity === 0}
+                  disabled={!isInStock}
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  Add to Cart
+                  {isInStock ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleToggleFavorite}
-                >
-                  <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleShareProduct}
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-full h-12"
+                    onClick={handleToggleFavorite}
+                  >
+                    <Heart className={`h-5 w-5 mr-2 ${isFavorite ? "fill-current text-red-500" : ""}`} />
+                    Favorite
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-full h-12"
+                    onClick={handleShareProduct}
+                  >
+                    <Share2 className="h-5 w-5 mr-2" />
+                    Share
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Product Details Section */}
+        {product.description && (
+          <div className="glass-card rounded-3xl p-6 lg:p-8 mb-8">
+            <h2 className="text-2xl font-bold mb-4">Product Details</h2>
+            <div className="prose prose-sm max-w-none">
+              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            </div>
+          </div>
+        )}
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-2xl font-bold mb-6">Related Products</h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold">You May Also Like</h2>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct) => (
                 <ProductCard
