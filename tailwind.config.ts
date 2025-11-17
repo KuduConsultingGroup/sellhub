@@ -17,12 +17,17 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
+        background: {
+          DEFAULT: "hsl(var(--background))",
+          start: "hsl(var(--background-start))",
+          end: "hsl(var(--background-end))",
+        },
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
           hover: "hsl(var(--primary-hover))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -39,7 +44,6 @@ export default {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
-          hover: "hsl(var(--accent-hover))",
         },
         success: {
           DEFAULT: "hsl(var(--success))",
@@ -52,6 +56,18 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        glass: {
+          bg: "hsl(var(--glass-bg))",
+          border: "hsl(var(--glass-border))",
+        },
+        colors: {
+          red: "hsl(var(--color-red))",
+          blue: "hsl(var(--color-blue))",
+          green: "hsl(var(--color-green))",
+          orange: "hsl(var(--color-orange))",
+          purple: "hsl(var(--color-purple))",
+          pink: "hsl(var(--color-pink))",
         },
       },
       borderRadius: {

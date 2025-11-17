@@ -2,14 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Modern, futuristic e-commerce design system with glassmorphism and neumorphism
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Base colors - clean, sophisticated palette */
-    --background: 0 0% 100%;
+    /* Base - light gradient background */
+    --background: 220 20% 98%;
+    --background-start: 220 20% 98%;
+    --background-end: 215 30% 96%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -18,62 +20,78 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary - sophisticated slate/charcoal */
-    --primary: 215 25% 27%;
-    --primary-foreground: 210 40% 98%;
-    --primary-hover: 215 25% 20%;
+    /* Primary - neon green/lime for CTAs */
+    --primary: 85 85% 55%;
+    --primary-foreground: 222 47% 11%;
+    --primary-hover: 85 85% 48%;
+    --primary-glow: 85 85% 65%;
 
-    /* Secondary - warm beige/neutral */
-    --secondary: 30 20% 95%;
+    /* Secondary - soft neutrals */
+    --secondary: 220 15% 95%;
     --secondary-foreground: 222 47% 11%;
 
     /* Muted - subtle grays */
-    --muted: 210 20% 96%;
+    --muted: 220 15% 94%;
     --muted-foreground: 215 16% 47%;
 
-    /* Accent - warm amber for CTAs */
-    --accent: 25 95% 53%;
+    /* Accent - additional accent color */
+    --accent: 200 95% 50%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 25 95% 45%;
+
+    /* Popular color palette for filters */
+    --color-red: 0 85% 60%;
+    --color-blue: 210 95% 55%;
+    --color-green: 140 85% 50%;
+    --color-orange: 30 95% 55%;
+    --color-purple: 270 75% 60%;
+    --color-pink: 330 85% 65%;
 
     /* Success, warning, destructive */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
     /* Borders and inputs */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 215 25% 27%;
+    --border: 220 20% 88%;
+    --input: 220 20% 92%;
+    --ring: 85 85% 55%;
 
-    --radius: 0.5rem;
+    --radius: 1.5rem;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(215 25% 27%), hsl(215 25% 20%));
-    --gradient-accent: linear-gradient(135deg, hsl(25 95% 53%), hsl(35 95% 53%));
+    --gradient-primary: linear-gradient(135deg, hsl(85 85% 55%), hsl(85 85% 65%));
+    --gradient-background: linear-gradient(180deg, hsl(220 20% 98%), hsl(215 30% 96%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(0 0% 100% / 0.7));
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    /* Glassmorphism */
+    --glass-bg: 0 0% 100% / 0.6;
+    --glass-border: 0 0% 100% / 0.3;
+    
+    /* Shadows - soft neumorphism */
+    --shadow-soft: 0 8px 32px 0 rgb(0 0 0 / 0.08);
+    --shadow-glass: 0 8px 32px 0 rgb(31 38 135 / 0.15);
+    --shadow-card: 0 20px 60px 0 rgb(0 0 0 / 0.1);
+    --shadow-float: 0 30px 60px -12px rgb(0 0 0 / 0.15);
   }
 
   .dark {
     --background: 222 47% 11%;
+    --background-start: 222 47% 11%;
+    --background-end: 220 45% 14%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;
+    --card: 217 33% 17%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 11%;
+    --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 85 85% 55%;
     --primary-foreground: 222 47% 11%;
-    --primary-hover: 210 40% 92%;
+    --primary-hover: 85 85% 48%;
+    --primary-glow: 85 85% 65%;
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -81,16 +99,15 @@ All colors MUST be HSL.
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 25 95% 53%;
+    --accent: 200 95% 50%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 25 95% 45%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 25%;
+    --input: 217 33% 20%;
+    --ring: 85 85% 55%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 212 27% 84%;
+    --glass-bg: 217 33% 17% / 0.6;
+    --glass-border: 0 0% 100% / 0.1;
   }
 }
 
@@ -100,11 +117,24 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-gradient-to-b from-background-start to-background-end text-foreground antialiased;
+    background-image: var(--gradient-background);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-bold tracking-tight;
+  }
+  
+  h1 {
+    @apply text-5xl md:text-6xl lg:text-7xl;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
   }
 }
 
@@ -115,6 +145,40 @@ All colors MUST be HSL.
   
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-accent);
+    background-image: var(--gradient-primary);
+  }
+  
+  /* Glassmorphism utility */
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--glass-border));
+  }
+  
+  /* Soft shadows */
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-glass {
+    box-shadow: var(--shadow-glass);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-float {
+    box-shadow: var(--shadow-float);
+  }
+  
+  /* Hover scale effect */
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-float;
   }
 }
