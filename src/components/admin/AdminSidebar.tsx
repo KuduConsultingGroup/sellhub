@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, FolderTree, Megaphone, Ticket, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, Megaphone, Ticket, ShoppingCart, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -21,6 +21,7 @@ const items = [
   { title: "Promotions", url: "/admin/promotions", icon: Megaphone },
   { title: "Coupons", url: "/admin/coupons", icon: Ticket },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+  { title: "Users", url: "/admin/users", icon: Users },
 ];
 
 export function AdminSidebar() {
