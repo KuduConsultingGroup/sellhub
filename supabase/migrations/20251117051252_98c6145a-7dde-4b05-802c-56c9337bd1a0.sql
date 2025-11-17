@@ -1,0 +1,8 @@
+-- Add new fields to products table
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS short_description TEXT,
+ADD COLUMN IF NOT EXISTS sale_price NUMERIC,
+ADD COLUMN IF NOT EXISTS brand TEXT,
+ADD COLUMN IF NOT EXISTS sku TEXT,
+ADD COLUMN IF NOT EXISTS tags TEXT[],
+ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;
