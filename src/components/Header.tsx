@@ -85,6 +85,19 @@ const Header = () => {
             <span className="text-2xl font-bold tracking-tight">ShopHub</span>
           </Link>
 
+          {/* Navigation Menu - Desktop */}
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium">
+            <Link to="/" className="hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link to="/products" className="hover:text-primary transition-colors">
+              Products
+            </Link>
+            <Link to="/products" className="hover:text-primary transition-colors">
+              Shop
+            </Link>
+          </nav>
+
           {/* Center Search Bar */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
             <div className="relative w-full">
