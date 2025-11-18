@@ -1,56 +1,100 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, ShoppingCart, X } from "lucide-react";
+import { Heart, ShoppingCart, X, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const MyWishlist = () => {
-  // Mock wishlist data
-  const wishlistItems = [
-    {
-      id: "1",
-      name: "Premium Wireless Headphones",
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-      price: 199.99,
-      salePrice: 149.99,
-      inStock: true,
-    },
-    {
-      id: "2",
-      name: "Smart Watch Series 5",
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      price: 299.99,
-      inStock: true,
-    },
-    {
-      id: "3",
-      name: "Wireless Gaming Mouse",
-      image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f",
-      price: 79.99,
-      inStock: false,
-    },
-    {
-      id: "4",
-      name: "Mechanical Keyboard",
-      image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
-      price: 129.99,
-      salePrice: 99.99,
-      inStock: true,
-    },
-    {
-      id: "5",
-      name: "USB-C Hub",
-      image: "https://images.unsplash.com/photo-1560343090-f0409e92791a",
-      price: 49.99,
-      inStock: true,
-    },
-    {
-      id: "6",
-      name: "Laptop Stand",
-      image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46",
-      price: 39.99,
-      inStock: true,
-    },
-  ];
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const fetchWishlist = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("favorites")
+        .select(`
+          id,
+          product_id,
+          products (
+            id,
+            name,
+            slug,
+            price,
+            sale_price,
+            main_image_url,
+            stock_quantity
+          )
+        `)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setWishlistItems(data || []);
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load wishlist",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemove = async (favoriteId: string, productName: string) => {
+    setRemovingId(favoriteId);
+    
+    try {
+      const { error } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("id", favoriteId);
+
+      if (error) throw error;
+
+      setWishlistItems(prev => prev.filter(item => item.id !== favoriteId));
+      
+      toast({
+        title: "Removed from wishlist",
+        description: `${productName} has been removed from your wishlist`,
+      });
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item from wishlist",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -73,52 +117,71 @@ const MyWishlist = () => {
             <Heart className="h-16 w-16 text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">Your wishlist is empty</h3>
             <p className="text-muted-foreground mb-6">Start adding items you love!</p>
-            <Button>Browse Products</Button>
+            <Button onClick={() => navigate("/products")}>Browse Products</Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {wishlistItems.map((item) => (
-            <Card key={item.id} className="group hover:shadow-lg transition-all">
-              <CardContent className="p-0">
-                <div className="relative aspect-square overflow-hidden rounded-t-xl">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <button className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                  {!item.inStock && (
-                    <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
-                      <Badge variant="secondary" className="text-sm">Out of Stock</Badge>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 space-y-3">
-                  <h3 className="font-semibold line-clamp-2 min-h-[48px]">{item.name}</h3>
-                  <div className="flex items-baseline gap-2">
-                    {item.salePrice ? (
-                      <>
-                        <span className="text-2xl font-bold text-primary">${item.salePrice}</span>
-                        <span className="text-sm text-muted-foreground line-through">${item.price}</span>
-                      </>
-                    ) : (
-                      <span className="text-2xl font-bold">${item.price}</span>
+          {wishlistItems.map((item) => {
+            const product = item.products;
+            const inStock = product.stock_quantity > 0;
+            
+            return (
+              <Card key={item.id} className="group hover:shadow-lg transition-all">
+                <CardContent className="p-0">
+                  <div className="relative aspect-square overflow-hidden rounded-t-xl">
+                    <img
+                      src={product.main_image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <button 
+                      onClick={() => handleRemove(item.id, product.name)}
+                      disabled={removingId === item.id}
+                      className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors disabled:opacity-50"
+                    >
+                      {removingId === item.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                    </button>
+                    {!inStock && (
+                      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                        <Badge variant="secondary" className="text-sm">Out of Stock</Badge>
+                      </div>
                     )}
                   </div>
-                  <Button 
-                    className="w-full gap-2" 
-                    disabled={!item.inStock}
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    {item.inStock ? "Add to Cart" : "Out of Stock"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="p-4 space-y-3">
+                    <h3 
+                      className="font-semibold line-clamp-2 min-h-[48px] cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => navigate(`/product/${product.slug}`)}
+                    >
+                      {product.name}
+                    </h3>
+                    <div className="flex items-baseline gap-2">
+                      {product.sale_price ? (
+                        <>
+                          <span className="text-2xl font-bold text-primary">${product.sale_price.toFixed(2)}</span>
+                          <span className="text-sm text-muted-foreground line-through">${product.price.toFixed(2)}</span>
+                        </>
+                      ) : (
+                        <span className="text-2xl font-bold">${product.price.toFixed(2)}</span>
+                      )}
+                    </div>
+                    <Button 
+                      className="w-full gap-2" 
+                      disabled={!inStock}
+                      onClick={() => navigate(`/product/${product.slug}`)}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      {inStock ? "Add to Cart" : "Out of Stock"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
