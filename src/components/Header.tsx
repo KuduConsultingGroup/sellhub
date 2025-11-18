@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { ShoppingCart, Heart, Search, LogOut, User as UserIcon } from "lucide-react";
+import { ShoppingCart, Heart, Search, LogOut, User as UserIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,6 +20,11 @@ const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
   const [cartCount, setCartCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,6 +58,30 @@ const Header = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) {
+        handleSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
 
   const checkAdminRole = async (userId: string) => {
     const { data } = await supabase
@@ -100,6 +129,48 @@ const Header = () => {
     }
   };
 
+  const handleSearch = async (query: string) => {
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, slug, price, sale_price, main_image_url, short_description")
+        .eq("is_active", true)
+        .or(`name.ilike.%${query}%, description.ilike.%${query}%, short_description.ilike.%${query}%, brand.ilike.%${query}%`)
+        .limit(8);
+
+      if (!error && data) {
+        setSearchResults(data);
+        setShowResults(true);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+      setShowResults(false);
+      setSearchQuery("");
+    }
+  };
+
+  const handleProductClick = (slug: string) => {
+    navigate(`/product/${slug}`);
+    setShowResults(false);
+    setSearchQuery("");
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowResults(false);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -128,20 +199,105 @@ const Header = () => {
           </nav>
 
           {/* Center Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-            <div className="relative w-full">
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8" ref={searchRef}>
+            <form onSubmit={handleSearchSubmit} className="relative w-full">
               <Input
                 type="search"
                 placeholder="Search products..."
-                className="w-full pl-4 pr-12 py-6 rounded-full bg-muted/50 border-none focus-visible:ring-2 focus-visible:ring-primary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchResults.length > 0 && setShowResults(true)}
+                className="w-full pl-4 pr-24 py-6 rounded-full bg-muted/50 border-none focus-visible:ring-2 focus-visible:ring-primary"
               />
+              {searchQuery && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={clearSearch}
+                  className="absolute right-14 top-1/2 -translate-y-1/2 rounded-full h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
               <Button
+                type="submit"
                 size="icon"
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-primary hover:bg-primary-hover"
               >
                 <Search className="h-5 w-5" />
               </Button>
-            </div>
+
+              {/* Search Results Dropdown */}
+              {showResults && searchResults.length > 0 && (
+                <div className="absolute top-full mt-2 w-full bg-background rounded-2xl shadow-lg border border-border overflow-hidden z-50">
+                  <div className="max-h-96 overflow-y-auto">
+                    {searchResults.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleProductClick(product.slug)}
+                        className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
+                      >
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          {product.main_image_url ? (
+                            <img
+                              src={product.main_image_url}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Search className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{product.name}</p>
+                          {product.short_description && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {product.short_description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end">
+                          {product.sale_price ? (
+                            <>
+                              <span className="text-sm font-bold text-primary">
+                                ${product.sale_price.toFixed(2)}
+                              </span>
+                              <span className="text-xs text-muted-foreground line-through">
+                                ${product.price.toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-bold">
+                              ${product.price.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  {searchQuery && (
+                    <div className="border-t border-border p-2">
+                      <button
+                        onClick={handleSearchSubmit}
+                        className="w-full text-sm text-center text-primary hover:text-primary-hover py-2 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        View all results for "{searchQuery}"
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {showResults && searchResults.length === 0 && searchQuery.trim().length >= 2 && !isSearching && (
+                <div className="absolute top-full mt-2 w-full bg-background rounded-2xl shadow-lg border border-border p-6 text-center z-50">
+                  <Search className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No products found for "{searchQuery}"</p>
+                </div>
+              )}
+            </form>
           </div>
 
           {/* Right Side - Icons and User */}
@@ -215,20 +371,100 @@ const Header = () => {
         </div>
 
         {/* Mobile Search */}
-        <div className="md:hidden mt-4">
-          <div className="relative">
+        <div className="md:hidden mt-4" ref={searchRef}>
+          <form onSubmit={handleSearchSubmit} className="relative">
             <Input
               type="search"
               placeholder="Search products..."
-              className="w-full pl-4 pr-12 py-5 rounded-full bg-muted/50 border-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchResults.length > 0 && setShowResults(true)}
+              className="w-full pl-4 pr-20 py-5 rounded-full bg-muted/50 border-none"
             />
+            {searchQuery && (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={clearSearch}
+                className="absolute right-12 top-1/2 -translate-y-1/2 rounded-full h-7 w-7"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
             <Button
+              type="submit"
               size="icon"
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-9 w-9 bg-primary hover:bg-primary-hover"
             >
               <Search className="h-4 w-4" />
             </Button>
-          </div>
+
+            {/* Mobile Search Results */}
+            {showResults && searchResults.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-background rounded-2xl shadow-lg border border-border overflow-hidden z-50">
+                <div className="max-h-80 overflow-y-auto">
+                  {searchResults.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleProductClick(product.slug)}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {product.main_image_url ? (
+                          <img
+                            src={product.main_image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Search className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{product.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {product.sale_price ? (
+                            <>
+                              <span className="text-xs font-bold text-primary">
+                                ${product.sale_price.toFixed(2)}
+                              </span>
+                              <span className="text-xs text-muted-foreground line-through">
+                                ${product.price.toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs font-bold">
+                              ${product.price.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {searchQuery && (
+                  <div className="border-t border-border p-2">
+                    <button
+                      onClick={handleSearchSubmit}
+                      className="w-full text-xs text-center text-primary hover:text-primary-hover py-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      View all results for "{searchQuery}"
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {showResults && searchResults.length === 0 && searchQuery.trim().length >= 2 && !isSearching && (
+              <div className="absolute top-full mt-2 w-full bg-background rounded-2xl shadow-lg border border-border p-4 text-center z-50">
+                <Search className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                <p className="text-xs text-muted-foreground">No products found</p>
+              </div>
+            )}
+          </form>
         </div>
       </div>
     </header>
