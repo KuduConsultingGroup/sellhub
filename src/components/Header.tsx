@@ -199,7 +199,7 @@ const Header = () => {
           <div className="hidden md:flex flex-1 max-w-2xl mx-8" ref={searchRef}>
             <form onSubmit={handleSearchSubmit} className="relative w-full">
               <Input
-                type="search"
+                type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -373,7 +373,7 @@ const Header = () => {
         <div className="md:hidden mt-4" ref={searchRef}>
           <form onSubmit={handleSearchSubmit} className="relative">
             <Input
-              type="search"
+              type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
