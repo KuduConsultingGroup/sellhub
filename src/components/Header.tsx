@@ -191,9 +191,6 @@ const Header = () => {
               Home
             </Link>
             <Link to="/products" className="hover:text-primary transition-colors">
-              Products
-            </Link>
-            <Link to="/products" className="hover:text-primary transition-colors">
               Shop
             </Link>
           </nav>
