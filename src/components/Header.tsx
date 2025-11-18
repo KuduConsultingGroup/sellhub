@@ -235,6 +235,7 @@ const Header = () => {
                     {searchResults.map((product) => (
                       <button
                         key={product.id}
+                        type="button"
                         onClick={() => handleProductClick(product.slug)}
                         className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
                       >
@@ -281,6 +282,7 @@ const Header = () => {
                   {searchQuery && (
                     <div className="border-t border-border p-2">
                       <button
+                        type="button"
                         onClick={handleSearchSubmit}
                         className="w-full text-sm text-center text-primary hover:text-primary-hover py-2 rounded-lg hover:bg-muted transition-colors"
                       >
@@ -407,6 +409,7 @@ const Header = () => {
                   {searchResults.map((product) => (
                     <button
                       key={product.id}
+                      type="button"
                       onClick={() => handleProductClick(product.slug)}
                       className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
                     >
@@ -448,6 +451,7 @@ const Header = () => {
                 {searchQuery && (
                   <div className="border-t border-border p-2">
                     <button
+                      type="button"
                       onClick={handleSearchSubmit}
                       className="w-full text-xs text-center text-primary hover:text-primary-hover py-2 rounded-lg hover:bg-muted transition-colors"
                     >
