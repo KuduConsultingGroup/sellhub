@@ -159,11 +159,7 @@ const Header = () => {
     }
   };
 
-  const handleProductClick = (slug: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleProductClick = (slug: string) => {
     navigate(`/product/${slug}`);
     setShowResults(false);
     setSearchQuery("");
@@ -240,7 +236,7 @@ const Header = () => {
                       <button
                         key={product.id}
                         type="button"
-                        onClick={(e) => handleProductClick(product.slug, e)}
+                        onClick={() => handleProductClick(product.slug)}
                         className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
                       >
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
@@ -414,7 +410,7 @@ const Header = () => {
                     <button
                       key={product.id}
                       type="button"
-                      onClick={(e) => handleProductClick(product.slug, e)}
+                      onClick={() => handleProductClick(product.slug)}
                       className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
                     >
                       <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
