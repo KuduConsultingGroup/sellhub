@@ -19,6 +19,7 @@ const Header = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +29,9 @@ const Header = () => {
       if (session?.user) {
         checkAdminRole(session.user.id);
         fetchUserProfile(session.user.id);
+        fetchCartCount(session.user.id);
+      } else {
+        fetchGuestCartCount();
       }
     });
 
@@ -39,9 +43,11 @@ const Header = () => {
       if (session?.user) {
         checkAdminRole(session.user.id);
         fetchUserProfile(session.user.id);
+        fetchCartCount(session.user.id);
       } else {
         setIsAdmin(false);
         setUserName("");
+        fetchGuestCartCount();
       }
     });
 
@@ -68,6 +74,29 @@ const Header = () => {
 
     if (data) {
       setUserName(data.name);
+    }
+  };
+
+  const fetchCartCount = async (userId: string) => {
+    const { data } = await supabase
+      .from("cart_items")
+      .select("quantity")
+      .eq("user_id", userId);
+
+    if (data) {
+      const totalCount = data.reduce((sum, item) => sum + item.quantity, 0);
+      setCartCount(totalCount);
+    }
+  };
+
+  const fetchGuestCartCount = () => {
+    const localCart = localStorage.getItem("guestCart");
+    if (localCart) {
+      const parsedCart: { productId: string; quantity: number }[] = JSON.parse(localCart);
+      const totalCount = parsedCart.reduce((sum, item) => sum + item.quantity, 0);
+      setCartCount(totalCount);
+    } else {
+      setCartCount(0);
     }
   };
 
@@ -137,7 +166,7 @@ const Header = () => {
               <Link to="/cart">
                 <ShoppingCart className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  0
+                  {cartCount}
                 </span>
               </Link>
             </Button>
