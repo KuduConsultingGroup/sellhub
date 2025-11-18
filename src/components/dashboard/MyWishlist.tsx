@@ -11,6 +11,7 @@ const MyWishlist = () => {
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -85,6 +86,67 @@ const MyWishlist = () => {
       });
     } finally {
       setRemovingId(null);
+    }
+  };
+
+  const handleAddToCart = async (productId: string, productName: string) => {
+    setAddingToCartId(productId);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to add items to cart",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      // Check if item already exists in cart
+      const { data: existingItem } = await supabase
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("user_id", user.id)
+        .eq("product_id", productId)
+        .single();
+
+      if (existingItem) {
+        // Update quantity if item exists
+        const { error } = await supabase
+          .from("cart_items")
+          .update({ quantity: existingItem.quantity + 1 })
+          .eq("id", existingItem.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new item if it doesn't exist
+        const { error } = await supabase
+          .from("cart_items")
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            quantity: 1,
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Added to cart",
+        description: `${productName} has been added to your cart`,
+      });
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart",
+        variant: "destructive",
+      });
+    } finally {
+      setAddingToCartId(null);
     }
   };
 
@@ -171,10 +233,14 @@ const MyWishlist = () => {
                     </div>
                     <Button 
                       className="w-full gap-2" 
-                      disabled={!inStock}
-                      onClick={() => navigate(`/product/${product.slug}`)}
+                      disabled={!inStock || addingToCartId === product.id}
+                      onClick={() => handleAddToCart(product.id, product.name)}
                     >
-                      <ShoppingCart className="h-4 w-4" />
+                      {addingToCartId === product.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="h-4 w-4" />
+                      )}
                       {inStock ? "Add to Cart" : "Out of Stock"}
                     </Button>
                   </div>
