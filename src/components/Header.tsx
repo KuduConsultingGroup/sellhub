@@ -20,6 +20,8 @@ const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -35,6 +37,7 @@ const Header = () => {
         checkAdminRole(session.user.id);
         fetchUserProfile(session.user.id);
         fetchCartCount(session.user.id);
+        fetchWishlistCount(session.user.id);
       } else {
         fetchGuestCartCount();
       }
@@ -49,9 +52,12 @@ const Header = () => {
         checkAdminRole(session.user.id);
         fetchUserProfile(session.user.id);
         fetchCartCount(session.user.id);
+        fetchWishlistCount(session.user.id);
       } else {
         setIsAdmin(false);
         setUserName("");
+        setWishlistCount(0);
+        setWishlistItems([]);
         fetchGuestCartCount();
       }
     });
@@ -126,6 +132,18 @@ const Header = () => {
       setCartCount(totalCount);
     } else {
       setCartCount(0);
+    }
+  };
+
+  const fetchWishlistCount = async (userId: string) => {
+    const { data } = await supabase
+      .from("favorites")
+      .select("*, products(id, name, slug, price, main_image_url)")
+      .eq("user_id", userId);
+
+    if (data) {
+      setWishlistCount(data.length);
+      setWishlistItems(data.slice(0, 3)); // Show only first 3 items in dropdown
     }
   };
 
@@ -301,16 +319,67 @@ const Header = () => {
 
           {/* Right Side - Icons and User */}
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full hover:bg-muted"
-              asChild
-            >
-              <Link to="/favorites">
-                <Heart className="h-5 w-5" />
-              </Link>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full hover:bg-muted relative"
+                >
+                  <Heart className="h-5 w-5" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 bg-background">
+                <DropdownMenuLabel>My Wishlist</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {wishlistCount === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Your wishlist is empty
+                  </div>
+                ) : (
+                  <>
+                    {wishlistItems.map((item: any) => (
+                      <DropdownMenuItem
+                        key={item.id}
+                        className="cursor-pointer"
+                        onClick={() => navigate(`/product/${item.products.slug}`)}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                            {item.products.main_image_url ? (
+                              <img
+                                src={item.products.main_image_url}
+                                alt={item.products.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Heart className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{item.products.name}</p>
+                            <p className="text-xs text-primary font-bold">${item.products.price.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard/wishlist" className="w-full text-center font-medium cursor-pointer">
+                        View All ({wishlistCount})
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Button
               variant="ghost"
