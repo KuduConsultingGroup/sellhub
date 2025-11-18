@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import Header from "@/components/Header";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHome from "@/components/dashboard/DashboardHome";
 import MyOrders from "@/components/dashboard/MyOrders";
@@ -43,6 +44,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <Header />
       <div className="flex gap-6 p-4 md:p-6 max-w-[1600px] mx-auto">
         <DashboardSidebar user={user} />
         
