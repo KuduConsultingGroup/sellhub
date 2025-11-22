@@ -12,34 +12,67 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Verify the requesting user is a super admin
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    // Check for Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('Missing Authorization header');
+      return new Response(JSON.stringify({ error: 'Missing authorization token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { data: hasAdminRole } = await supabaseClient
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
+
+    // Verify the requesting user is a super admin
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError) {
+      console.error('Auth error:', authError);
+      return new Response(JSON.stringify({ error: 'Authentication failed', details: authError.message }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!user) {
+      console.error('No user found in session');
+      return new Response(JSON.stringify({ error: 'User not authenticated' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('User authenticated:', user.id);
+
+    const { data: hasAdminRole, error: roleError } = await supabaseClient
       .rpc('has_role', { _user_id: user.id, _role: 'super_admin' });
 
+    if (roleError) {
+      console.error('Role check error:', roleError);
+      return new Response(JSON.stringify({ error: 'Failed to verify admin status', details: roleError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!hasAdminRole) {
-      return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
+      console.error('User does not have super_admin role:', user.id);
+      return new Response(JSON.stringify({ error: 'Forbidden: Super admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('User has super_admin role verified');
 
     // Parse request body
     const { email, password, name, role } = await req.json();
