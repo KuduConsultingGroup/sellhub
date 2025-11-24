@@ -67,37 +67,42 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen flex gap-6 p-6 bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen flex gap-0 lg:gap-6 lg:p-6 bg-gradient-to-br from-background via-background to-muted/20 overflow-hidden">
       <AdminSidebar user={user} />
       
-      <main className="flex-1">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <Button
-              variant="outline"
-              asChild
-            >
-              <Link to="/" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Store
-              </Link>
-            </Button>
+      <Routes>
+        <Route path="messages" element={
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <MessagesManagement />
           </div>
-          
-          <Routes>
-            <Route index element={<AdminOverview />} />
-            <Route path="products" element={<ProductsManagement />} />
-            <Route path="categories" element={<CategoriesManagement />} />
-            <Route path="promotions" element={<PromotionsManagement />} />
-            <Route path="coupons" element={<CouponsManagement />} />
-            <Route path="orders" element={<OrdersManagement />} />
-            <Route path="messages" element={<MessagesManagement />} />
-            <Route path="users" element={<UsersManagement />} />
-            <Route path="*" element={<Navigate to="/admin" replace />} />
-          </Routes>
-        </div>
-      </main>
+        } />
+        <Route path="*" element={
+          <main className="flex-1 p-6 lg:p-0">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                <Button variant="outline" asChild>
+                  <Link to="/" className="flex items-center gap-2">
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to Store
+                  </Link>
+                </Button>
+              </div>
+              
+              <Routes>
+                <Route index element={<AdminOverview />} />
+                <Route path="products" element={<ProductsManagement />} />
+                <Route path="categories" element={<CategoriesManagement />} />
+                <Route path="promotions" element={<PromotionsManagement />} />
+                <Route path="coupons" element={<CouponsManagement />} />
+                <Route path="orders" element={<OrdersManagement />} />
+                <Route path="users" element={<UsersManagement />} />
+                <Route path="*" element={<Navigate to="/admin" replace />} />
+              </Routes>
+            </div>
+          </main>
+        } />
+      </Routes>
     </div>
   );
 };
