@@ -8,8 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { X, Upload, Image as ImageIcon } from "lucide-react";
+import { X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "./ImageUpload";
 
 interface Category {
   id: string;
@@ -55,18 +56,15 @@ const ProductForm = ({ product, categories, onSubmit, onCancel }: ProductFormPro
     }
   };
 
-  const handleImageUrlAdd = (type: "main" | "additional") => {
-    const url = prompt("Enter image URL:");
-    if (url) {
-      if (type === "main") {
-        setFormData(prev => ({ ...prev, main_image_url: url }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          additional_images: [...prev.additional_images, url]
-        }));
-      }
+  const handleAddAdditionalImage = (url: string) => {
+    if (formData.additional_images.length >= 10) {
+      toast.error("Maximum 10 images allowed");
+      return;
     }
+    setFormData(prev => ({
+      ...prev,
+      additional_images: [...prev.additional_images, url]
+    }));
   };
 
   const handleRemoveAdditionalImage = (index: number) => {
@@ -257,68 +255,50 @@ const ProductForm = ({ product, categories, onSubmit, onCancel }: ProductFormPro
         <CardHeader>
           <CardTitle>Product Images</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Main Image *</Label>
-            <div className="flex gap-4">
-              {formData.main_image_url ? (
-                <div className="relative w-32 h-32 border rounded-lg overflow-hidden">
-                  <img
-                    src={formData.main_image_url}
-                    alt="Main"
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleChange("main_image_url", "")}
-                    className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => handleImageUrlAdd("main")}
-                  className="w-32 h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary"
-                >
-                  <Upload className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Add Image URL</span>
-                </button>
-              )}
-            </div>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <Label>Main Product Image *</Label>
+            <ImageUpload
+              value={formData.main_image_url}
+              onChange={(url) => handleChange("main_image_url", url)}
+              onRemove={() => handleChange("main_image_url", "")}
+              aspectRatio="square"
+            />
           </div>
 
           <Separator />
 
-          <div className="space-y-2">
-            <Label>Additional Images (Gallery)</Label>
-            <div className="grid grid-cols-4 gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Additional Images (Gallery)</Label>
+              <span className="text-xs text-muted-foreground">
+                {formData.additional_images.length}/10 images
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {formData.additional_images.map((url: string, idx: number) => (
-                <div key={idx} className="relative w-full aspect-square border rounded-lg overflow-hidden">
-                  <img
-                    src={url}
-                    alt={`Additional ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveAdditionalImage(idx)}
-                    className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                <div key={idx} className="relative group">
+                  <div className="relative aspect-square border rounded-xl overflow-hidden">
+                    <img
+                      src={url}
+                      alt={`Gallery ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAdditionalImage(idx)}
+                      className="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               ))}
               {formData.additional_images.length < 10 && (
-                <button
-                  type="button"
-                  onClick={() => handleImageUrlAdd("additional")}
-                  className="w-full aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary"
-                >
-                  <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Add More</span>
-                </button>
+                <ImageUpload
+                  onChange={handleAddAdditionalImage}
+                  aspectRatio="square"
+                />
               )}
             </div>
           </div>
