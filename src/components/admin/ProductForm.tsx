@@ -87,12 +87,22 @@ const ProductForm = ({ product, categories, onSubmit, onCancel }: ProductFormPro
     
     try {
       const submitData = {
-        ...formData,
+        name: formData.name,
+        slug: formData.slug,
+        short_description: formData.short_description,
+        description: formData.description,
+        category_id: formData.category_id,
         price: parseFloat(formData.price),
         sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
         stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : null,
+        brand: formData.brand,
+        sku: formData.sku,
         tags: formData.tags ? formData.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
+        main_image_url: formData.main_image_url,
         images: formData.additional_images,
+        is_new: formData.is_new,
+        is_active: formData.is_active,
+        is_featured: formData.is_featured,
       };
 
       await onSubmit(submitData);
