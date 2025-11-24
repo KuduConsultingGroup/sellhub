@@ -237,7 +237,7 @@ export const ImageUpload = ({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`relative w-full ${aspectClass} border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer ${
+        className={`relative w-full h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer ${
           isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
         } ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
         onClick={() => !isUploading && fileInputRef.current?.click()}
