@@ -6,12 +6,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { AttachmentUpload } from "@/components/messaging/AttachmentUpload";
+import { MessageBubble } from "@/components/messaging/MessageBubble";
+import { TypingIndicator } from "@/components/messaging/TypingIndicator";
 
 interface Message {
   id: string;
   text: string;
   sender_type: "user" | "guest" | "admin";
   created_at: string;
+  attachments?: any;
+  is_read: boolean;
 }
 
 interface Conversation {
@@ -28,7 +33,10 @@ const Messages = () => {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [attachment, setAttachment] = useState<{ url: string; name: string; type: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -135,16 +143,33 @@ const Messages = () => {
         conversation_id: selectedConversation,
         sender_type: "user",
         sender_id: user?.id,
-        text: inputText
+        text: inputText,
+        attachments: attachment ? [attachment] : null,
       });
 
     if (error) {
       toast({ title: "Error sending message", variant: "destructive" });
     } else {
       setInputText("");
+      setAttachment(null);
     }
 
     setLoading(false);
+  };
+
+  const handleInputChange = (text: string) => {
+    setInputText(text);
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    if (text.length > 0) {
+      setIsTyping(true);
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false);
+      }, 1000);
+    }
   };
 
   const scrollToBottom = () => {
@@ -249,34 +274,33 @@ const Messages = () => {
               <ScrollArea className="flex-1 p-4" ref={scrollRef}>
                 <div className="space-y-4">
                   {messages.map((message) => (
-                    <div
+                    <MessageBubble
                       key={message.id}
-                      className={`flex ${message.sender_type === "admin" ? "justify-start" : "justify-end"}`}
-                    >
-                      <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                          message.sender_type === "admin"
-                            ? "bg-muted text-foreground"
-                            : "bg-primary text-primary-foreground"
-                        }`}
-                      >
-                        <p className="text-sm">{message.text}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {format(new Date(message.created_at), "MMM d, HH:mm")}
-                        </p>
-                      </div>
-                    </div>
+                      text={message.text}
+                      senderType={message.sender_type}
+                      timestamp={message.created_at}
+                      attachments={message.attachments}
+                      isRead={message.is_read}
+                      isOwnMessage={message.sender_type === "user"}
+                    />
                   ))}
+                  {isTyping && <TypingIndicator name="Support" />}
                 </div>
               </ScrollArea>
 
               <div className="p-4 border-t border-border">
                 <div className="flex gap-2">
+                  {selectedConversation && (
+                    <AttachmentUpload
+                      conversationId={selectedConversation}
+                      onAttachmentSelect={(url, name, type) => setAttachment({ url, name, type })}
+                    />
+                  )}
                   <Input
                     placeholder="Type your message..."
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
                     disabled={loading}
                     className="rounded-xl"
                   />
