@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  MessageCircle
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ const DashboardSidebar = ({ user }: DashboardSidebarProps) => {
     { icon: Heart, label: "My Wishlist", path: "/dashboard/wishlist" },
     { icon: MapPin, label: "Saved Addresses", path: "/dashboard/addresses" },
     { icon: Tag, label: "Promotions", path: "/dashboard/promotions" },
+    { icon: MessageCircle, label: "Messages", path: "/dashboard/messages" },
     { icon: Settings, label: "Settings", path: "/dashboard/settings" },
   ];
 

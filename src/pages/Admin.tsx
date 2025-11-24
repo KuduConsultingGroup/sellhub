@@ -9,6 +9,7 @@ import CategoriesManagement from "@/components/admin/CategoriesManagement";
 import PromotionsManagement from "@/components/admin/PromotionsManagement";
 import CouponsManagement from "@/components/admin/CouponsManagement";
 import OrdersManagement from "@/components/admin/OrdersManagement";
+import MessagesManagement from "@/components/admin/MessagesManagement";
 import { UsersManagement } from "@/components/admin/UsersManagement";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -86,6 +87,7 @@ const Admin = () => {
                 <Route path="promotions" element={<PromotionsManagement />} />
                 <Route path="coupons" element={<CouponsManagement />} />
                 <Route path="orders" element={<OrdersManagement />} />
+                <Route path="messages" element={<MessagesManagement />} />
                 <Route path="users" element={<UsersManagement />} />
                 <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>

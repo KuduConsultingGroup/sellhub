@@ -11,6 +11,7 @@ import MyWishlist from "@/components/dashboard/MyWishlist";
 import SavedAddresses from "@/components/dashboard/SavedAddresses";
 import MyPromotions from "@/components/dashboard/MyPromotions";
 import Settings from "@/components/dashboard/Settings";
+import Messages from "@/components/dashboard/Messages";
 import { Loader2 } from "lucide-react";
 
 const Dashboard = () => {
@@ -56,6 +57,7 @@ const Dashboard = () => {
             <Route path="wishlist" element={<MyWishlist />} />
             <Route path="addresses" element={<SavedAddresses />} />
             <Route path="promotions" element={<MyPromotions />} />
+            <Route path="messages" element={<Messages />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
