@@ -260,9 +260,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel }: ProductFormPro
             <Label>Main Product Image *</Label>
             <ImageUpload
               value={formData.main_image_url}
-              onChange={(url) => handleChange("main_image_url", url)}
+              onChange={(url) => handleChange("main_image_url", typeof url === 'string' ? url : url[0])}
               onRemove={() => handleChange("main_image_url", "")}
               aspectRatio="square"
+              multiple={false}
             />
           </div>
 
@@ -295,10 +296,21 @@ const ProductForm = ({ product, categories, onSubmit, onCancel }: ProductFormPro
                 </div>
               ))}
               {formData.additional_images.length < 10 && (
-                <ImageUpload
-                  onChange={handleAddAdditionalImage}
-                  aspectRatio="square"
-                />
+                <div className="col-span-2 md:col-span-3 lg:col-span-4">
+                  <ImageUpload
+                    onChange={(urls) => {
+                      const urlArray = Array.isArray(urls) ? urls : [urls];
+                      const remaining = 10 - formData.additional_images.length;
+                      const newUrls = urlArray.slice(0, remaining);
+                      setFormData(prev => ({
+                        ...prev,
+                        additional_images: [...prev.additional_images, ...newUrls]
+                      }));
+                    }}
+                    aspectRatio="square"
+                    multiple={true}
+                  />
+                </div>
               )}
             </div>
           </div>
