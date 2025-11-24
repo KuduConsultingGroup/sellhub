@@ -44,21 +44,21 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <Header />
-      <div className="flex gap-6 p-4 md:p-6 max-w-[1600px] mx-auto">
+      <div className="flex-1 flex gap-6 p-4 md:p-6 max-w-[1600px] mx-auto overflow-hidden w-full">
         <DashboardSidebar user={user} />
         
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
           <Routes>
-            <Route index element={<DashboardHome />} />
-            <Route path="orders" element={<MyOrders />} />
-            <Route path="orders/:orderId" element={<OrderDetail />} />
-            <Route path="wishlist" element={<MyWishlist />} />
-            <Route path="addresses" element={<SavedAddresses />} />
-            <Route path="promotions" element={<MyPromotions />} />
+            <Route index element={<div className="flex-1 overflow-auto"><DashboardHome /></div>} />
+            <Route path="orders" element={<div className="flex-1 overflow-auto"><MyOrders /></div>} />
+            <Route path="orders/:orderId" element={<div className="flex-1 overflow-auto"><OrderDetail /></div>} />
+            <Route path="wishlist" element={<div className="flex-1 overflow-auto"><MyWishlist /></div>} />
+            <Route path="addresses" element={<div className="flex-1 overflow-auto"><SavedAddresses /></div>} />
+            <Route path="promotions" element={<div className="flex-1 overflow-auto"><MyPromotions /></div>} />
+            <Route path="settings" element={<div className="flex-1 overflow-auto"><Settings /></div>} />
             <Route path="messages" element={<Messages />} />
-            <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>

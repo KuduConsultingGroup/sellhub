@@ -67,33 +67,33 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen flex gap-6 p-6 bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="flex h-screen gap-6 p-6 bg-gradient-to-br from-background via-background to-muted/20 overflow-hidden">
       <AdminSidebar user={user} />
       
-      <main className="flex-1">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <Button
-              variant="outline"
-              asChild
-            >
-              <Link to="/" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Store
-              </Link>
-            </Button>
-          </div>
-          
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <Button
+            variant="outline"
+            asChild
+          >
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Store
+            </Link>
+          </Button>
+        </div>
+        
+        <div className="flex-1 overflow-hidden flex flex-col">
           <Routes>
-            <Route index element={<AdminOverview />} />
-            <Route path="products" element={<ProductsManagement />} />
-            <Route path="categories" element={<CategoriesManagement />} />
-            <Route path="promotions" element={<PromotionsManagement />} />
-            <Route path="coupons" element={<CouponsManagement />} />
-            <Route path="orders" element={<OrdersManagement />} />
+            <Route index element={<div className="flex-1 overflow-auto"><AdminOverview /></div>} />
+            <Route path="products" element={<div className="flex-1 overflow-auto"><ProductsManagement /></div>} />
+            <Route path="categories" element={<div className="flex-1 overflow-auto"><CategoriesManagement /></div>} />
+            <Route path="promotions" element={<div className="flex-1 overflow-auto"><PromotionsManagement /></div>} />
+            <Route path="coupons" element={<div className="flex-1 overflow-auto"><CouponsManagement /></div>} />
+            <Route path="orders" element={<div className="flex-1 overflow-auto"><OrdersManagement /></div>} />
+            <Route path="users" element={<div className="flex-1 overflow-auto"><UsersManagement /></div>} />
             <Route path="messages" element={<MessagesManagement />} />
-            <Route path="users" element={<UsersManagement />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </div>
