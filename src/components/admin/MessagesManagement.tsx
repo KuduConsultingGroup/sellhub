@@ -45,6 +45,7 @@ const MessagesManagement = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [attachment, setAttachment] = useState<{ url: string; name: string; type: string } | null>(null);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
@@ -210,15 +211,16 @@ const MessagesManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Messages</h1>
-        <p className="text-muted-foreground mt-1">Manage customer conversations</p>
+    <div className="flex flex-col h-full">
+      {/* Header - only show on desktop and when not in mobile chat view */}
+      <div className={`p-4 border-b border-border bg-card/50 backdrop-blur-sm ${showMobileChat ? 'hidden lg:block' : 'block'}`}>
+        <h1 className="text-2xl font-bold text-foreground">Messages</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage customer conversations</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[700px]">
-        {/* Filters Sidebar */}
-        <div className="lg:col-span-1 bg-card rounded-2xl border border-border p-4 space-y-4">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Filters Sidebar - hide on mobile */}
+        <div className="hidden lg:flex w-64 flex-shrink-0 border-r border-border bg-card flex-col p-4 space-y-4">
           <div>
             <h3 className="font-semibold mb-3">Filters</h3>
             <div className="space-y-3">
@@ -275,17 +277,20 @@ const MessagesManagement = () => {
           </div>
         </div>
 
-        {/* Conversations List */}
-        <div className="lg:col-span-1 bg-card rounded-2xl border border-border overflow-hidden">
+        {/* Conversations List - hide on mobile when chat is open */}
+        <div className={`w-full lg:w-80 flex-shrink-0 border-r border-border bg-card ${showMobileChat ? 'hidden lg:flex' : 'flex'} flex-col`}>
           <div className="p-4 border-b border-border bg-muted/30">
             <h2 className="font-semibold">Conversations ({filteredConversations.length})</h2>
           </div>
-          <ScrollArea className="h-[calc(700px-60px)]">
+          <ScrollArea className="flex-1">
             <div className="p-2">
               {filteredConversations.map((conv) => (
                 <button
                   key={conv.id}
-                  onClick={() => setSelectedConversation(conv)}
+                  onClick={() => {
+                    setSelectedConversation(conv);
+                    setShowMobileChat(true);
+                  }}
                   className={`w-full p-4 rounded-xl text-left transition-colors mb-2 ${
                     selectedConversation?.id === conv.id
                       ? "bg-primary/10 border-2 border-primary"
@@ -321,12 +326,20 @@ const MessagesManagement = () => {
         </div>
 
         {/* Chat Window */}
-        <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden flex flex-col">
+        <div className={`flex-1 bg-card ${showMobileChat ? 'flex' : 'hidden lg:flex'} flex-col`}>
           {selectedConversation ? (
             <>
               <div className="p-4 border-b border-border bg-gradient-to-r from-primary/10 to-primary/5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="lg:hidden h-8 w-8"
+                      onClick={() => setShowMobileChat(false)}
+                    >
+                      <Send className="h-4 w-4 rotate-180" />
+                    </Button>
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
                       <span className="text-sm font-semibold text-primary">
                         {getDisplayName(selectedConversation).charAt(0)}
@@ -388,7 +401,7 @@ const MessagesManagement = () => {
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t border-border">
+              <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
                 <div className="flex gap-2">
                   <MessageTemplates onSelectTemplate={(content) => setInputText(content)} />
                   {selectedConversation && (
@@ -420,8 +433,8 @@ const MessagesManagement = () => {
               />
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              Select a conversation to view messages
+            <div className="flex-1 flex items-center justify-center text-muted-foreground p-8">
+              <p className="hidden lg:block">Select a conversation to view messages</p>
             </div>
           )}
         </div>
