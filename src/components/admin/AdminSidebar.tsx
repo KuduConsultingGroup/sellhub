@@ -13,8 +13,9 @@ import {
   X
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 interface AdminSidebarProps {
@@ -24,6 +25,82 @@ interface AdminSidebarProps {
 export function AdminSidebar({ user }: AdminSidebarProps) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [newUsersCount, setNewUsersCount] = useState(0);
+
+  useEffect(() => {
+    fetchCounts();
+    
+    // Set up realtime subscriptions
+    const messagesChannel = supabase
+      .channel('admin-messages-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        fetchUnreadMessagesCount();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
+        fetchUnreadMessagesCount();
+      })
+      .subscribe();
+
+    const ordersChannel = supabase
+      .channel('admin-orders-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchPendingOrdersCount();
+      })
+      .subscribe();
+
+    const usersChannel = supabase
+      .channel('admin-users-count')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
+        fetchNewUsersCount();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(usersChannel);
+    };
+  }, []);
+
+  const fetchUnreadMessagesCount = async () => {
+    const { count } = await supabase
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'open');
+    
+    setUnreadMessagesCount(count || 0);
+  };
+
+  const fetchPendingOrdersCount = async () => {
+    const { count } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    
+    setPendingOrdersCount(count || 0);
+  };
+
+  const fetchNewUsersCount = async () => {
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+    const { count } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', twoDaysAgo.toISOString());
+    
+    setNewUsersCount(count || 0);
+  };
+
+  const fetchCounts = async () => {
+    await Promise.all([
+      fetchUnreadMessagesCount(),
+      fetchPendingOrdersCount(),
+      fetchNewUsersCount(),
+    ]);
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -31,14 +108,14 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Overview", path: "/admin" },
-    { icon: Package, label: "Products", path: "/admin/products" },
-    { icon: FolderTree, label: "Categories", path: "/admin/categories" },
-    { icon: Megaphone, label: "Promotions", path: "/admin/promotions" },
-    { icon: Ticket, label: "Coupons", path: "/admin/coupons" },
-    { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
-    { icon: MessageCircle, label: "Messages", path: "/admin/messages" },
-    { icon: Users, label: "Users", path: "/admin/users" },
+    { icon: LayoutDashboard, label: "Overview", path: "/admin", badge: null },
+    { icon: Package, label: "Products", path: "/admin/products", badge: null },
+    { icon: FolderTree, label: "Categories", path: "/admin/categories", badge: null },
+    { icon: Megaphone, label: "Promotions", path: "/admin/promotions", badge: null },
+    { icon: Ticket, label: "Coupons", path: "/admin/coupons", badge: null },
+    { icon: ShoppingCart, label: "Orders", path: "/admin/orders", badge: pendingOrdersCount },
+    { icon: MessageCircle, label: "Messages", path: "/admin/messages", badge: unreadMessagesCount },
+    { icon: Users, label: "Users", path: "/admin/users", badge: newUsersCount },
   ];
 
   const SidebarContent = () => (
@@ -68,7 +145,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             end={item.path === "/admin"}
             onClick={() => setMobileMenuOpen(false)}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative ${
                 isActive
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -76,7 +153,15 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             }
           >
             <item.icon className="h-5 w-5" />
-            <span className="font-medium">{item.label}</span>
+            <span className="font-medium flex-1">{item.label}</span>
+            {item.badge !== null && item.badge > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="h-5 min-w-5 px-1.5 text-xs font-semibold"
+              >
+                {item.badge > 99 ? '99+' : item.badge}
+              </Badge>
+            )}
           </NavLink>
         ))}
 
