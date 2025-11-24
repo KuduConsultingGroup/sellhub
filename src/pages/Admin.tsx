@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import AdminOverview from "@/components/admin/AdminOverview";
 import ProductsManagement from "@/components/admin/ProductsManagement";
@@ -13,11 +12,11 @@ import MessagesManagement from "@/components/admin/MessagesManagement";
 import { UsersManagement } from "@/components/admin/UsersManagement";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     checkAdminAccess();
@@ -31,6 +30,8 @@ const Admin = () => {
       setLoading(false);
       return;
     }
+
+    setUser(session.user);
 
     const { data } = await supabase
       .from("user_roles")
@@ -66,35 +67,38 @@ const Admin = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AdminSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-16 border-b flex items-center px-6 gap-4">
-            <SidebarTrigger />
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="min-h-screen flex gap-6 p-6 bg-gradient-to-br from-background via-background to-muted/20">
+      <AdminSidebar user={user} />
+      
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <Button
+              variant="outline"
+              asChild
+            >
+              <Link to="/" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
                 Back to Store
               </Link>
             </Button>
-          </header>
-          <main className="flex-1 p-6 overflow-auto">
-            <Routes>
-              <Route index element={<AdminOverview />} />
-              <Route path="products" element={<ProductsManagement />} />
-              <Route path="categories" element={<CategoriesManagement />} />
-                <Route path="promotions" element={<PromotionsManagement />} />
-                <Route path="coupons" element={<CouponsManagement />} />
-                <Route path="orders" element={<OrdersManagement />} />
-                <Route path="messages" element={<MessagesManagement />} />
-                <Route path="users" element={<UsersManagement />} />
-                <Route path="*" element={<Navigate to="/admin" replace />} />
-            </Routes>
-          </main>
+          </div>
+          
+          <Routes>
+            <Route index element={<AdminOverview />} />
+            <Route path="products" element={<ProductsManagement />} />
+            <Route path="categories" element={<CategoriesManagement />} />
+            <Route path="promotions" element={<PromotionsManagement />} />
+            <Route path="coupons" element={<CouponsManagement />} />
+            <Route path="orders" element={<OrdersManagement />} />
+            <Route path="messages" element={<MessagesManagement />} />
+            <Route path="users" element={<UsersManagement />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Routes>
         </div>
-      </div>
-    </SidebarProvider>
+      </main>
+    </div>
   );
 };
 
