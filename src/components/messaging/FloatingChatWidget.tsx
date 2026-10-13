@@ -33,7 +33,7 @@ export const FloatingChatWidget = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [attachment, setAttachment] = useState<{ url: string; name: string; type: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const { toast } = useToast();
 
   useEffect(() => {

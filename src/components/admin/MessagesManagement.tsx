@@ -47,7 +47,7 @@ const MessagesManagement = () => {
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const { toast } = useToast();
 
   useEffect(() => {

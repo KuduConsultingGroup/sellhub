@@ -37,7 +37,7 @@ const Messages = () => {
   const [attachment, setAttachment] = useState<{ url: string; name: string; type: string } | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const { toast } = useToast();
 
   useEffect(() => {
